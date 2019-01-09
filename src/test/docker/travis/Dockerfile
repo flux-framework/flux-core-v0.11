@@ -46,10 +46,15 @@ RUN case $BASE_IMAGE in \
      *) (>&2 echo "Unknown BASE_IMAGE") ;; \
     esac
 
-# Make sure user in appropriate group for sudo on different platorms
+# Install extra dependencies if necessary here.
+#
+# Do not forget to run `apt update` on Ubuntu/bionic.
+# Do NOT run `yum upgrade` on CentOS (this will unnecessarily upgrade
+#  existing packages)
+#
 RUN case $BASE_IMAGE in \
-     bionic*) apt-get -qq install -y --no-install-recommends python-six python3-six ;; \
-     centos*) yum -y install python-six python34-devel python34-cffi python34-six ;; \
+     bionic*) ;; \
+     centos*) ;; \
      *) (>&2 echo "Unknown BASE_IMAGE") ;; \
     esac
 
