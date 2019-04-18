@@ -117,7 +117,7 @@ before_install:
  #  Tag image if this build is on master or result of a tag:
  - |
   if test "$DOCKER_TAG" = "t" \
-    -a "$TRAVIS_REPO_SLUG" = "flux-framework/flux-core" \
+    -a "$TRAVIS_REPO_SLUG" = "flux-framework/flux-core-v0.11" \
     -a "$TRAVIS_PULL_REQUEST" = "false" \
     -a \( "$TRAVIS_BRANCH" = "master" -o -n "$TRAVIS_TAG" \); then
      export TAGNAME="${DOCKERREPO}:${IMG}${TRAVIS_TAG:+-${TRAVIS_TAG}}"
