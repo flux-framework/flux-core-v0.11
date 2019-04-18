@@ -94,6 +94,7 @@ env:
   global:
    - TAP_DRIVER_QUIET=1
    - DOCKERREPO=fluxrm/flux-core
+   - DOCKER_STABLE_PREFIX=-v0.11
    - DOCKER_USERNAME=travisflux
    # travis encrypt -r flux-framework/flux-core-v0.11
    # DOCKER_PASSWORD=xxxx
@@ -149,7 +150,7 @@ after_success:
      docker push ${TAGNAME}
      # If this is the bionic-base build, then also tag without image name:
      if echo "$TAGNAME" | grep -q "bionic-base"; then
-       t="${DOCKERREPO}:${TRAVIS_TAG:-latest}"
+       t="${DOCKERREPO}:${TRAVIS_TAG:${DOCKER_STABLE_PREFIX}-latest}"
        docker tag "$TAGNAME" ${t} && \
        docker push ${t}
      fi
