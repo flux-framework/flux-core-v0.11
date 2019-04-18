@@ -95,7 +95,9 @@ env:
    - TAP_DRIVER_QUIET=1
    - DOCKERREPO=fluxrm/flux-core
    - DOCKER_USERNAME=travisflux
-   - secure: "Uga2i1Yu0PvWMFzOYvM9yxnAMDTgY17ZqeFlIN8MV3uoTCy6y61GULrMkKuhuI1sUfyugpFWVKIJo5jwTpsfG84f3o9lUTRgLPpTA2Xls8A/rmurF/QacVv6hZ2Zs2LQVlrM8BkT36TpT2NfWW2D2238kovqz3l5gIZKMClMvyk="
+   # travis encrypt -r flux-framework/flux-core-v0.11
+   # DOCKER_PASSWORD=xxxx
+   - secure: "VzOP9JcziZ8qelU9PE7NJaSbZLoaQ0Ybu/DzqLVN0qfGer+u0R4RlTJvXROcGUQI2tnVWxlGwRqQOLuVNnHTBJGJIR5ZZQColKEsv+JguBjZV/E7o54SbkySptns7YJqf2c7S1//uPx2Vr8XZIlkaYL9Qk9MFfzcWVlszCfcq2zFt6PTwct0QvtuBAy1KwUSP9EygtIGvn5R1FWW/MbW7xn8P613XZ9M87zxJOgXbwhfcsC/VThbBcBx3BUCp5F+1BsQJQIVihQh87/s1EuoPo275g+kEh6S0DWyhWS3lyZ7DeuaYmymH7YTEk9HyC4Hd/0eBoMH/+MYOm+Zls2NLkpzuDz5DZWnsdyZzjOuU6W5h12luxRJMxkuTGNBTcKoj00DB2Z9trOX9n5QdwYp2HK1la21phJ0OmnRg402htSQdH5CHOBfv65O+i5zDyTd8oO2NQUwsatnhF4bK5nrP+MrqPbq9uhHw2siXazCnDTgadOVV3fE5a1uEZ2X7l3HVt6RngHX16/wlyrGCExHS7l2lCncUhBuCg2VMRIXwXrHx3K47GcJFu7TJoFyokg/KTEb0cuLqo4QKbF5P5XmfAAzoh7G1BW/9y50lKEEcJjQC26DKppTfHYz5eAp3+tXFNimB13eJJH5sqADQvuFrZbRo24fB3RSf77u3TSeQWU="
 
 cache:
   directories:
@@ -175,9 +177,11 @@ deploy:
   prerelease: true
   body: "View [Release Notes](${TAG_URI}/NEWS.md#${ANCHOR}) for flux-core ${TRAVIS_TAG}"
   api_key:
-    secure: I7ckZ7Ei9oLIe8WZ8OH3EgZz81IFCIekx+v/+g3sJa6q15URlfZhVVFtiUpsJRktHcb39AflWZiEIX+HdUZyXtuTt9IES1XBIKH7x/zUL0x6f1DZKAhBx9ktYzdO/M+SpmDUg6RYxcdjVmSHZ9u935TDo104U+dY0990ZSFrpco=
+    # Generate on github.com/settings/token personal access token and encrypt with
+    # travis encrypt -r flux-framework/repo_slug
+    secure: "dSZYBOVcI42xqVcjNTIymIpgbyuMquRxMcWDMplCxd6RzFLzwMkch+zJHDA4NvBma6tuemwnweGfsehRjjNu9Y3gyok6Tejwl8aURwt7i5u6baibmFXZNr33j4qS3GgEmygdFALyjj6fIvdbGD+jQxVNLbYkPgvbpekJwxw66gszKU3lujmcRQK3x0gHe65WqdLq6q0BcL2fttXIL3BleS1ac/cEya1IHfKMBw4Lnq3qrzh4vcB3FwdBJnw4D8JKFof/WpJYInDOtlufBxk0jagNyd/egK68O0aYnV1PNh3+goRIuGPTtEbRb8cjuNZ5ChR9Qed2z08es2ss96Q2ATnQfCbUxqzyYTiPqPlmrPHDRlFBjCHA3GtnKQzWHnOR5i6WWff4O4JHe4pg2AwSEkGQ/8sy81+r5LibLcbNK+NGQzBxxNnHTDx5bHPyN+Z2q6tLgNkD+5Tlfutjc1mk4np7kdiicFLIcVMWNMDm4YyMI6Y2OwQlMjkVRi1Z9RwUvAyp1ltw6FLQoLdMOfmnhrj65QLUoUuor7JIRPK4B5TYUjpSWnKd37MG5tkzrClmZ4iFIEB8/MY50Qy4Y7G1siuijgQoIOT1Z+8VUYL3snxDY6M1wl2KGpb3cU5Z/HP3AvX5jxLzqI+KQgttB0KLcHvA2Q/mth3rJPQ4CQY3+bM="
   on:
     # Only deploy from travis builder with GITHUB_RELEASES_DEPLOY set
     condition: $GITHUB_RELEASES_DEPLOY = "t"
     tags: true
-    repo: flux-framework/flux-core
+    repo: flux-framework/flux-core-v0.11
