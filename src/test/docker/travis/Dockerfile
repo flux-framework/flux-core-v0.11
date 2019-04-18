@@ -53,8 +53,8 @@ RUN case $BASE_IMAGE in \
 #  existing packages)
 #
 RUN case $BASE_IMAGE in \
-     bionic*) ;; \
-     centos*) ;; \
+     bionic*) apt update && apt install -yy --no-install-recommends libyaml-cpp-dev;; \
+     centos*) yum -y update && yum -y install yaml-cpp-devel ;; \
      *) (>&2 echo "Unknown BASE_IMAGE") ;; \
     esac
 
