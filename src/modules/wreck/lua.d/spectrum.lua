@@ -15,10 +15,26 @@ function prepend_path (env_var, path)
     env[env_var] = path..suffix
 end
 
+local function strip_env_by_prefix (env, prefix)
+    --
+    -- Have to call env:get() to translate env object to Lua table
+    --  in order to use pairs() to iterate environment keys:
+    --
+    for k,v in pairs (env:get()) do
+        if k:match("^"..prefix) then
+            env[k] = nil
+        end
+    end
+end
+
 function rexecd_init ()
     local env = wreck.environ
     local f = wreck.flux
     local rundir = f:getattr ('broker.rundir')
+
+    -- Clear all existing PMIX_ and OMPI_ values before setting our own
+    strip_env_by_prefix (env, "PMIX_")
+    strip_env_by_prefix (env, "OMPI_")
 
     -- Avoid shared memory segment name collisions
     -- when flux instance runs >1 broker per node.
@@ -28,12 +44,7 @@ function rexecd_init ()
     env['OMPI_MCA_osc'] = "pt2pt"
     env['OMPI_MCA_pml'] = "yalla"
     env['OMPI_MCA_btl'] = "self"
-    env['MPI_ROOT'] = "/opt/ibm/spectrum_mpi"
-    env['OPAL_LIBDIR'] = "/opt/ibm/spectrum_mpi/lib"
     env['OMPI_MCA_coll_hcoll_enable'] = '0'
-
-    env['PMIX_SERVER_URI'] = nil
-    env['PMIX_SERVER_URI2'] = nil
 
     -- Help find libcollectives.so
     prepend_path ('LD_LIBRARY_PATH', '/opt/ibm/spectrum_mpi/lib/pami_port')
