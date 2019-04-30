@@ -34,10 +34,13 @@ test_expect_success "intel mpi only rewrites when necessary" '
 '
 
 OPTS="-o mpi=spectrum"
-test_expect_success "spectrum mpi sets MPI_ROOT" '
-  run_program 5 ${SIZE} ${SIZE} printenv MPI_ROOT \
-        | tee spectrum-mpi.env \
-    && test "$(uniq spectrum-mpi.env)" = "/opt/ibm/spectrum_mpi"
+test_expect_success "spectrum mpi unsets all existing PMIX_ OMPI_ vars" '
+    export OMPI_foo=1 &&
+    export PMIX_foo=1 &&
+    run_program 5 ${SIZE} ${SIZE} /usr/bin/env > spectrum-mpi.env && 
+    test_expect_code 1 grep PMIX_foo spectrum-mpi.env &&
+    test_expect_code 1 grep OMPI_foo spectrum-mpi.env &&
+    unset OMPI_foo && unset PMIX_foo
 '
 
 OPTS="-o mpi=spectrum"
