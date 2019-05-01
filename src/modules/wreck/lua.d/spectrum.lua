@@ -7,10 +7,19 @@ local posix = require 'posix'
 
 function prepend_path (env_var, path)
     local env = wreck.environ
-    if env[env_var] == nil then
+    local val = env[env_var]
+
+    -- If path is already in env_var, do nothing. We stick ":" on both
+    -- ends of the existing value so we can easily match exact paths
+    -- instead of possibly matching substrings of paths when trying
+    -- to match "zero or more" colons.
+    --
+    if ((":"..val..":"):match (":"..path..":")) then return end
+
+    if val == nil then
        suffix = ''
     else
-       suffix = ':'..env[env_var]
+       suffix = ':'..val
     end
     env[env_var] = path..suffix
 end
