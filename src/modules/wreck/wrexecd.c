@@ -1607,12 +1607,48 @@ static struct prog_ctx *l_get_prog_ctx_from_environ (lua_State *L, int index)
     return ctx;
 }
 
+/*  Get a copy of current environment as a table
+ */
+static int l_environ_get (lua_State *L)
+{
+    struct prog_ctx *ctx = l_get_prog_ctx_from_environ (L, 1);
+    char **environ = prog_ctx_env_create (ctx);
+    char **e;
+
+    lua_newtable (L);
+    for (e = environ; *e != NULL; e++) {
+        char *s = *e;
+        char *eq = strchr (s, '=');
+        if (eq) {
+            lua_pushlstring (L, s, eq - s);
+            lua_pushstring (L, eq+1);
+        } else {
+            lua_pushstring (L, s);
+            lua_pushboolean (L, 1);
+        }
+        lua_settable (L, -3);
+    }
+    free (environ);
+    return 1;
+}
+
 static int l_environ_index (lua_State *L)
 {
     struct prog_ctx *ctx = l_get_prog_ctx_from_environ (L, 1);
     const char *key = lua_tostring (L, 2);
-    const char *val = prog_ctx_getenv (ctx, key);
+    const char *val = NULL;
 
+    if (key == NULL)
+        return 0;
+
+    /* Handle env:get() method to return copy of env as table:
+     */
+    if (key && strcmp (key, "get") == 0) {
+        lua_pushcfunction (L, l_environ_get);
+        return 1;
+    }
+
+    val = prog_ctx_getenv (ctx, key);
     if (val)
         lua_pushstring (L, val);
     else

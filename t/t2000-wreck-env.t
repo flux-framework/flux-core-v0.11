@@ -47,5 +47,28 @@ test_expect_success 'wreck: wreckrun --skip-env works' '
 	) &&
 	test "$(cat printenv2.out)" = ""
 '
+test_expect_success 'wreck plugins can use wreck:environ:get()' '
+	saved_pattern=$(flux getattr wrexec.lua_pattern) &&
+	if test $? = 0; then
+	  test_when_finished \
+	    "flux setattr wrexec.lua_pattern \"$saved_pattern\""
+	else
+	  test_when_finished \
+	     "flux setattr --expunge wrexec.lua_pattern"
+	fi &&
+	cat <<-EOF >test.lua &&
+	function rexecd_init ()
+	    local env = wreck.environ:get()
+	    for k,v in pairs(env) do
+	        if k:match ("UNSETME_") then wreck.environ [k] = nil end
+	    end
+	end
+	EOF
+	UNSETME_foo=1 flux wreckrun /usr/bin/env > all_env.out &&
+	grep UNSETME all_env.out &&
+	flux setattr wrexec.lua_pattern "$(pwd)/*.lua" &&
+	UNSETME_foo=1 flux wreckrun /usr/bin/env > all_env.out &&
+	test_expect_code 1 grep UNSETME all_env.out
+'
 
 test_done
