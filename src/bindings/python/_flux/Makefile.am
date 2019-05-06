@@ -33,8 +33,8 @@ _core_build.py: $(MAKE_BINDING)
 		src/include/flux/core.h
 
 BUILT_SOURCES= _core.c
-fluxso_LTLIBRARIES = _core.la
-fluxso_PYTHON = __init__.py
+fluxpyso_LTLIBRARIES = _core.la
+fluxpyso_PYTHON = __init__.py
 
 nodist__core_la_SOURCES = _core.c
 _core_la_LIBADD = $(common_libs)
@@ -42,7 +42,7 @@ _core_la_DEPENDENCIES = _core_build.py
 
 if HAVE_FLUX_SECURITY
 BUILT_SOURCES += _security.c
-fluxso_LTLIBRARIES += _security.la
+fluxpyso_LTLIBRARIES += _security.la
 _security_build.py: $(MAKE_BINDING)
 	$(PYTHON) $(MAKE_BINDING) --path $(FLUX_SECURITY_INCDIR)/flux/security \
 		--package _flux \
@@ -59,10 +59,10 @@ endif
 
 .PHONY: lib-copy
 
-lib-copy-vpath: ${fluxso_PYTHON} ${fluxso_LTLIBRARIES}
+lib-copy-vpath: ${fluxpyso_PYTHON} ${fluxpyso_LTLIBRARIES}
 	-echo Copying libraries to where they can be used by python in-tree
 	[ "$(top_srcdir)" != "$(top_builddir)" ] && cp $(top_srcdir)/src/bindings/python/_flux/__init__.py ./; \
-	for LIB in ${fluxso_LTLIBRARIES:la=so} ; do \
+	for LIB in ${fluxpyso_LTLIBRARIES:la=so} ; do \
 		test -e .libs/$$LIB && \
 		$(LN_S) .libs/$$LIB ./ || true; \
 	done
@@ -76,3 +76,17 @@ clean-local-vpath:
 clean-local: clean-local-vpath
 	-rm -f *.c *_build.py *.so *.pyc *.pyo
 	-rm -rf __pycache__
+
+install-data-hook:
+	$(AM_V_at)echo Linking python modules in non-standard location... && \
+	  $(MKDIR_P) "$(DESTDIR)$(fluxpylinkdir)" && \
+	  target=$(fluxpysodir) && \
+	  f=$${target##*/} && \
+	  cd "$(DESTDIR)$(fluxpylinkdir)" && \
+	  rm -f $$f && \
+	  $(LN_S) $$target .
+
+uninstall-local:
+	$(AM_V_at)target=$(fluxpysodir) && f=$${target##*/} && \
+	  echo "Removing $(fluxpylinkdir)/$$f" && \
+	  rm -rf $(fluxpylinkdir)/$$f
