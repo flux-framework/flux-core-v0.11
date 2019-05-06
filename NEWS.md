@@ -1,3 +1,17 @@
+flux-core version 0.11.1 - 2019-05-06
+-------------------------------------
+
+**NOTE:** A new repo has been created to track flux-core v0.11 stable
+          development. Bug reports against v0.11.x should be opened in
+          the issue tracker for the repository at:
+          https://github.com/flux-framework/flux-core-v0.11.
+
+### Fixes
+ * never prepend system python path to PYTHONPATH (#8)
+
+### New Features
+ * broker: add global rundir attr from which broker.rundir is derived (#5)
+
 flux-core version 0.11.0 - 2019-01-03
 -------------------------------------
 
