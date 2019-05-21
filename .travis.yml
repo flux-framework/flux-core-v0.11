@@ -94,7 +94,7 @@ env:
   global:
    - TAP_DRIVER_QUIET=1
    - DOCKERREPO=fluxrm/flux-core
-   - DOCKER_STABLE_PREFIX=-v0.11
+   - DOCKER_STABLE_BRANCH=v0.11
    - DOCKER_USERNAME=travisflux
    # travis encrypt -r flux-framework/flux-core-v0.11
    # DOCKER_PASSWORD=xxxx
@@ -118,10 +118,15 @@ before_install:
  - |
   if test "$DOCKER_TAG" = "t" \
     -a "$TRAVIS_REPO_SLUG" = "flux-framework/flux-core-v0.11" \
-    -a "$TRAVIS_PULL_REQUEST" = "false" \
-    -a \( "$TRAVIS_BRANCH" = "master" -o -n "$TRAVIS_TAG" \); then
-     export TAGNAME="${DOCKERREPO}:${IMG}${TRAVIS_TAG:+-${TRAVIS_TAG}}"
-     echo "Tagging new image $TAGNAME"
+    -a "$TRAVIS_PULL_REQUEST" = "false"; then
+      if test -n "$TRAVIS_TAG"; then
+          # Normal tagged version, use tag as suffix:
+          export TAGNAME="${DOCKERREPO}:${IMG}-${TRAVIS_TAG}"
+      elif test "$TRAVIS_BRANCH" = "master"; then
+          # Builds on master get tagged with "stable branch" suffix:
+          export TAGNAME="${DOCKERREPO}:${IMG}${DOCKER_STABLE_BRANCH:-$DOCKER_STABLE_BRANCH}"
+      fi
+      echo "Tagging new image $TAGNAME"
   fi
 
 script:
@@ -147,10 +152,12 @@ after_success:
   if test -n "$TAGNAME"; then
      echo "$DOCKER_PASSWORD" | \
        docker login -u "$DOCKER_USERNAME" --password-stdin && \
+     echo "docker push ${TAGNAME}"
      docker push ${TAGNAME}
      # If this is the bionic-base build, then also tag without image name:
      if echo "$TAGNAME" | grep -q "bionic"; then
-       t="${DOCKERREPO}:${TRAVIS_TAG:${DOCKER_STABLE_PREFIX}-latest}"
+       t="${DOCKERREPO}:${TRAVIS_TAG:${DOCKER_STABLE_BRANCH}}"
+       echo "docker push ${t}"
        docker tag "$TAGNAME" ${t} && \
        docker push ${t}
      fi
