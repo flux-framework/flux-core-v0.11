@@ -123,8 +123,9 @@ before_install:
           # Normal tagged version, use tag as suffix:
           export TAGNAME="${DOCKERREPO}:${IMG}-${TRAVIS_TAG}"
       elif test "$TRAVIS_BRANCH" = "master"; then
-          # Builds on master get tagged with "stable branch" suffix:
-          export TAGNAME="${DOCKERREPO}:${IMG}${DOCKER_STABLE_BRANCH:-$DOCKER_STABLE_BRANCH}"
+          # Builds on master get tagged with "$IMG-<stable branch>", or
+          #  just "$IMG" if DOCKER_STABLE_BRANCH not set
+          export TAGNAME="${DOCKERREPO}:${IMG}${DOCKER_STABLE_BRANCH:+-$DOCKER_STABLE_BRANCH}"
       fi
       echo "Tagging new image $TAGNAME"
   fi
@@ -155,8 +156,9 @@ after_success:
      echo "docker push ${TAGNAME}"
      docker push ${TAGNAME}
      # If this is the bionic-base build, then also tag without image name:
+     #  Use: TRAVIS_TAG if set, or DOCKER_STABLE_BRANCH if set, or "latest"
      if echo "$TAGNAME" | grep -q "bionic"; then
-       t="${DOCKERREPO}:${TRAVIS_TAG:${DOCKER_STABLE_BRANCH}}"
+       t="${DOCKERREPO}:${TRAVIS_TAG:-${DOCKER_STABLE_BRANCH:-latest}}"
        echo "docker push ${t}"
        docker tag "$TAGNAME" ${t} && \
        docker push ${t}
