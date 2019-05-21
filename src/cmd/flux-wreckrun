@@ -170,6 +170,12 @@ if not jobid then wreck:die ("%s\n", err) end
 
 wreck:verbose ("%4.03fs: Registered jobid %d\n", tt:get0(), jobid)
 
+local jobid_fd = tonumber (os.getenv ("FLUX_WRECKRUN_JOBID_FD"))
+if jobid_fd then
+    posix.write (jobid_fd, jobid.."\n")
+    posix.close (jobid_fd)
+end
+
 --
 --  Get a handle to this lwj kvsdir:
 --
