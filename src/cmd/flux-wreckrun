@@ -285,6 +285,11 @@ if not wreck:getopt ("I") then
     else
         wreck:verbose ("%-4.03fs: job.submit: %s\n", tt:get0(), err)
     end
+
+    -- If --detach was used, terminate just after scheduler issues runrequest:
+    if wreck:getopt ("d") then
+        wreck:setopt ("w", "runrequest")
+    end
 end
 
 if not submitted then
