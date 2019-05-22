@@ -238,6 +238,11 @@ function wreck:getopt (opt)
     return self.opts [opt]
 end
 
+function wreck:setopt (opt, optarg)
+    if not self.opts then error ("setopt called before parse_cmdline") end
+    self.opts [opt] = optarg or true
+end
+
 local function parse_walltime (s)
     local m = { s = 1, m = 60, h = 3600, d = 56400 }
     local n, suffix = s:match ("^([0-9.]+)([HhMmDdSs]?)$")
