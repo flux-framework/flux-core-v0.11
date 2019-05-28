@@ -1332,13 +1332,39 @@ int rexec_state_change (struct prog_ctx *ctx, const char *state)
     return (0);
 }
 
+int task_proctable_put (struct prog_ctx *ctx, int id)
+{
+    int rc = -1;
+    json_t *o = NULL;
+    char *key = NULL;;
+    struct task_info *t = ctx->task [id];
+
+    if (asprintf (&key, "%d.procdesc", t->globalid) < 0)
+        wlog_fatal (ctx, 1, "task_proctable_put: asprintf: %s",
+                    flux_strerror (errno));
+
+    o = json_pack ("{s:s s:i s:i}",
+                   "command", ctx->argv[0],
+                   "pid", t->pid,
+                   "nodeid", ctx->noderank);
+    if (!o || (rc = flux_kvsdir_put (ctx->kvs, key, json_dumps (o, 0)) < 0))
+        wlog_err (ctx, "task_proctable_put: %s", flux_strerror (errno));
+    free (key);
+    json_decref (o);
+    return (rc);
+}
 
 int send_startup_message (struct prog_ctx *ctx)
 {
     const char * state = "running";
 
-    if (prog_ctx_getopt (ctx, "stop-children-in-exec"))
+    if (prog_ctx_getopt (ctx, "stop-children-in-exec")) {
+        for (int i = 0; i < ctx->rankinfo.ntasks; i++) {
+            if (task_proctable_put (ctx, i) < 0)
+                return -1;
+        }
         state = "sync";
+    }
 
     if (rexec_state_change (ctx, state) < 0) {
         wlog_err (ctx, "rexec_state_change");
