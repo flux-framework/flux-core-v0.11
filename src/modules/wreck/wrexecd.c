@@ -1354,15 +1354,22 @@ int task_proctable_put (struct prog_ctx *ctx, int id)
     return (rc);
 }
 
+int generate_task_proctables (struct prog_ctx *ctx)
+{
+    for (int i = 0; i < ctx->rankinfo.ntasks; i++) {
+        if (task_proctable_put (ctx, i) < 0)
+            return -1;
+    }
+    return 0;
+}
+
 int send_startup_message (struct prog_ctx *ctx)
 {
     const char * state = "running";
 
     if (prog_ctx_getopt (ctx, "stop-children-in-exec")) {
-        for (int i = 0; i < ctx->rankinfo.ntasks; i++) {
-            if (task_proctable_put (ctx, i) < 0)
-                return -1;
-        }
+        if (generate_task_proctables (ctx) < 0)
+            return -1;
         state = "sync";
     }
 
@@ -2214,6 +2221,19 @@ void ev_cb (flux_t *f, flux_msg_handler_t *mw,
         flux_msg_unpack (msg, "{s:i}", "signal", &sig);
         wlog_msg (ctx, "Killing jobid %" PRIi64 " with signal %d", ctx->id, sig);
         prog_ctx_signal (ctx, sig);
+    }
+    else if (strcmp (topic+base, "proctable") == 0) {
+        char *name;
+        if (asprintf (&name, "lwj.%ju.procdesc", (uintmax_t) ctx->id) < 0) {
+            wlog_fatal (ctx, 1,
+                        "wreck.proctable: asprintf: %s",
+                        flux_strerror (errno));
+        }
+        wlog_msg (ctx, "dumping task proctables to kvs");
+        if (generate_task_proctables (ctx) < 0
+            || flux_kvs_fence_anon (ctx->flux, name, ctx->nnodes, 0) < 0)
+            wlog_fatal (ctx, 1, "failed to dump task procdesc to kvs");
+        free (name);
     }
 }
 
