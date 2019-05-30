@@ -50,6 +50,11 @@ include::wreck-options.adoc[]
 -I::
        Bypass scheduler and run job immediately.
 
+--jobid='id'::
+-J 'id' ::
+	Run a job immediately across the same ranks as a previous job. By
+	default, the number of tasks is set to the number of ranks such
+	that one task per broker rank is executed.
 
 include::wreck-extra-options.adoc[]
 
