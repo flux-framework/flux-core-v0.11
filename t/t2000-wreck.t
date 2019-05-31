@@ -210,7 +210,17 @@ test_expect_success 'wreckrun: -t2 -N${SIZE} sets correct ntasks in kvs' '
 	n=$(flux kvs get --json ${LWJ}.ntasks) &&
 	test "$n" = $((${SIZE}*2))
 '
-
+test_expect_success 'wreckrun: -j, --jobid works' '
+	flux wreckrun -d -n 2 -N 2 sleep 300 &&
+	jobid=$(last_job_id) &&
+	flux wreckrun -l --jobid ${jobid} echo hello | sort > jobid.output &&
+	flux wreck kill -s 9 ${jobid} &&
+	cat >jobid.expected <<-EOF &&
+	0: hello
+	1: hello
+	EOF
+	test_cmp jobid.expected jobid.output
+'
 test_expect_success 'wreckrun: ngpus is 0 by default' '
     flux wreckrun -n 2 /bin/true &&
     LWJ=$(last_job_path) &&
