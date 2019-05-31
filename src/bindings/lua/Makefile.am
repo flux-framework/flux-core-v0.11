@@ -54,7 +54,8 @@ check_LTLIBRARIES = \
 
 noinst_LTLIBRARIES = \
 	libfluxlua.la \
-	lalarm.la
+	lalarm.la \
+	libhostlist.la
 
 luamod_ldflags = \
 	-avoid-version -module -shared --disable-static \
@@ -100,11 +101,10 @@ flux_hostlist_la_LDFLAGS = \
 	-Wl,--defsym=luaopen_flux_hostlist=luaopen_hostlist
 
 flux_hostlist_la_LIBADD = \
+	libhostlist.la \
 	$(LUA_LIB)
 
 flux_hostlist_la_SOURCES = \
-	lua-hostlist/hostlist.c \
-	lua-hostlist/hostlist.h \
 	lua-hostlist/lua-hostlist.c
 
 libfluxlua_la_SOURCES = \
@@ -122,6 +122,10 @@ lalarm_la_LDFLAGS = \
 # lalarm doesn't need any of the other flux libs
 lalarm_la_LIBADD = \
 	$(LUA_LIB)
+
+libhostlist_la_SOURCES = \
+	lua-hostlist/hostlist.c \
+	lua-hostlist/hostlist.h
 
 tests_jsontest_la_LDFLAGS = \
 	$(luamod_ldflags) -rpath /dev/null
