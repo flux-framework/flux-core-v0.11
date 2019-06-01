@@ -130,6 +130,8 @@ struct prog_ctx {
 
     char *topic;            /* Per program topic base string for events */
 
+    int stopped_in_exec;
+
     hwloc_cpuset_t *cpusetp;
     hwloc_topology_t topology;
 
@@ -2083,7 +2085,6 @@ int exec_commands (struct prog_ctx *ctx)
 {
     char buf [4096];
     int i;
-    int stop_children = 0;
 
     wreck_lua_init (ctx);
     if (rexecd_init (ctx) < 0)
@@ -2100,11 +2101,11 @@ int exec_commands (struct prog_ctx *ctx)
     for (i = 0; i < ctx->rankinfo.ntasks; i++)
         exec_command (ctx, i);
 
-    if (prog_ctx_getopt (ctx, "stop-children-in-exec"))
-        stop_children = 1;
-    for (i = 0; i < ctx->rankinfo.ntasks; i++) {
-        if (stop_children)
+    if (prog_ctx_getopt (ctx, "stop-children-in-exec")) {
+        ctx->stopped_in_exec = 1;
+        for (i = 0; i < ctx->rankinfo.ntasks; i++) {
             start_trace_task (ctx->task [i]);
+        }
     }
 
     return send_startup_message (ctx);
@@ -2161,6 +2162,10 @@ int prog_ctx_signal (struct prog_ctx *ctx, int sig)
          */
         if ((killpg (pid, sig) < 0) && (kill (pid, sig) < 0))
             wlog_err (ctx, "kill (%d): %s", (int) pid, flux_strerror (errno));
+    }
+    if (sig == SIGCONT && ctx->stopped_in_exec) {
+        ctx->stopped_in_exec = 0;
+        rexec_state_change (ctx, "running");
     }
     return (0);
 }
