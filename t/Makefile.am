@@ -94,6 +94,7 @@ TESTS = \
 	t2200-job-ingest.t \
 	t2201-job-cmd.t \
 	t2202-job-manager.t \
+	t2203-job-debug.t \
 	t3000-mpi-basic.t \
         t3001-mpi-personalities.t \
 	t4000-issues-test-driver.t \
@@ -211,6 +212,7 @@ check_SCRIPTS = \
 	t2200-job-ingest.t \
 	t2201-job-cmd.t \
 	t2202-job-manager.t \
+	t2203-job-debug.t \
 	t3000-mpi-basic.t \
         t3001-mpi-personalities.t \
 	t4000-issues-test-driver.t \
