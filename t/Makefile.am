@@ -79,6 +79,7 @@ TESTS = \
 	t2000-wreck-dummy-sched.t \
 	t2000-wreck-epilog.t \
 	t2000-wreck-nokz.t \
+	t2000-wreck-procdesc.t \
 	t2001-jsc.t \
 	t2002-pmi.t \
 	t2003-recurse.t \
@@ -195,6 +196,7 @@ check_SCRIPTS = \
 	t2000-wreck-dummy-sched.t \
 	t2000-wreck-epilog.t \
 	t2000-wreck-nokz.t \
+	t2000-wreck-procdesc.t \
 	t2001-jsc.t \
 	t2002-pmi.t \
 	t2003-recurse.t \
