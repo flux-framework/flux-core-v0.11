@@ -130,6 +130,8 @@ struct prog_ctx {
 
     char *topic;            /* Per program topic base string for events */
 
+    int stopped_in_exec;
+
     hwloc_cpuset_t *cpusetp;
     hwloc_topology_t topology;
 
@@ -1332,13 +1334,46 @@ int rexec_state_change (struct prog_ctx *ctx, const char *state)
     return (0);
 }
 
+int task_proctable_put (struct prog_ctx *ctx, int id)
+{
+    int rc = -1;
+    json_t *o = NULL;
+    char *key = NULL;;
+    struct task_info *t = ctx->task [id];
+
+    if (asprintf (&key, "%d.procdesc", t->globalid) < 0)
+        wlog_fatal (ctx, 1, "task_proctable_put: asprintf: %s",
+                    flux_strerror (errno));
+
+    o = json_pack ("{s:s s:i s:i}",
+                   "command", ctx->argv[0],
+                   "pid", t->pid,
+                   "nodeid", ctx->noderank);
+    if (!o || (rc = flux_kvsdir_put (ctx->kvs, key, json_dumps (o, 0)) < 0))
+        wlog_err (ctx, "task_proctable_put: %s", flux_strerror (errno));
+    free (key);
+    json_decref (o);
+    return (rc);
+}
+
+int generate_task_proctables (struct prog_ctx *ctx)
+{
+    for (int i = 0; i < ctx->rankinfo.ntasks; i++) {
+        if (task_proctable_put (ctx, i) < 0)
+            return -1;
+    }
+    return 0;
+}
 
 int send_startup_message (struct prog_ctx *ctx)
 {
     const char * state = "running";
 
-    if (prog_ctx_getopt (ctx, "stop-children-in-exec"))
+    if (prog_ctx_getopt (ctx, "stop-children-in-exec")) {
+        if (generate_task_proctables (ctx) < 0)
+            return -1;
         state = "sync";
+    }
 
     if (rexec_state_change (ctx, state) < 0) {
         wlog_err (ctx, "rexec_state_change");
@@ -2050,7 +2085,6 @@ int exec_commands (struct prog_ctx *ctx)
 {
     char buf [4096];
     int i;
-    int stop_children = 0;
 
     wreck_lua_init (ctx);
     if (rexecd_init (ctx) < 0)
@@ -2067,11 +2101,11 @@ int exec_commands (struct prog_ctx *ctx)
     for (i = 0; i < ctx->rankinfo.ntasks; i++)
         exec_command (ctx, i);
 
-    if (prog_ctx_getopt (ctx, "stop-children-in-exec"))
-        stop_children = 1;
-    for (i = 0; i < ctx->rankinfo.ntasks; i++) {
-        if (stop_children)
+    if (prog_ctx_getopt (ctx, "stop-children-in-exec")) {
+        ctx->stopped_in_exec = 1;
+        for (i = 0; i < ctx->rankinfo.ntasks; i++) {
             start_trace_task (ctx->task [i]);
+        }
     }
 
     return send_startup_message (ctx);
@@ -2128,6 +2162,10 @@ int prog_ctx_signal (struct prog_ctx *ctx, int sig)
          */
         if ((killpg (pid, sig) < 0) && (kill (pid, sig) < 0))
             wlog_err (ctx, "kill (%d): %s", (int) pid, flux_strerror (errno));
+    }
+    if (sig == SIGCONT && ctx->stopped_in_exec) {
+        ctx->stopped_in_exec = 0;
+        rexec_state_change (ctx, "running");
     }
     return (0);
 }
@@ -2188,6 +2226,19 @@ void ev_cb (flux_t *f, flux_msg_handler_t *mw,
         flux_msg_unpack (msg, "{s:i}", "signal", &sig);
         wlog_msg (ctx, "Killing jobid %" PRIi64 " with signal %d", ctx->id, sig);
         prog_ctx_signal (ctx, sig);
+    }
+    else if (strcmp (topic+base, "proctable") == 0) {
+        char *name;
+        if (asprintf (&name, "lwj.%ju.procdesc", (uintmax_t) ctx->id) < 0) {
+            wlog_fatal (ctx, 1,
+                        "wreck.proctable: asprintf: %s",
+                        flux_strerror (errno));
+        }
+        wlog_msg (ctx, "dumping task proctables to kvs");
+        if (generate_task_proctables (ctx) < 0
+            || flux_kvs_fence_anon (ctx->flux, name, ctx->nnodes, 0) < 0)
+            wlog_fatal (ctx, 1, "failed to dump task procdesc to kvs");
+        free (name);
     }
 }
 
