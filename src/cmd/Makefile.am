@@ -75,7 +75,8 @@ fluxcmd_PROGRAMS = \
 	flux-start \
 	flux-jstat \
 	flux-job \
-	flux-exec
+	flux-exec \
+	flux-job-debug
 
 if ENABLE_JOBSPEC
 fluxcmd_PROGRAMS += \
@@ -90,6 +91,11 @@ endif
 flux_start_LDADD = \
 	$(fluxcmd_ldadd) \
 	$(top_builddir)/src/common/libpmi/libpmi.la \
+	$(LIBUTIL)
+
+flux_job_debug_LDADD = \
+	$(fluxcmd_ldadd) \
+	$(top_builddir)/src/bindings/lua/libhostlist.la \
 	$(LIBUTIL)
 
 #
