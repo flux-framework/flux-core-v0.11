@@ -1,10 +1,21 @@
-flux-core version 0.11.1 - 2019-05-06
--------------------------------------
 
 **NOTE:** A new repo has been created to track flux-core v0.11 stable
           development. Bug reports against v0.11.x should be opened in
           the issue tracker for the repository at:
           https://github.com/flux-framework/flux-core-v0.11.
+
+flux-core version 0.11.2 - 2019-06-05
+-------------------------------------
+### Fixes
+ * Fix flux-wreckrun --detach option when used under a scheduler (#16)
+
+### New Features
+ * Add flux job-debug command for parallel debugging support (#17)
+ * Support per-task procdesc key in wreck jobs to support debuggers (#16)
+ * Add -J, --jobid option to wreckrun (#16)
+
+flux-core version 0.11.1 - 2019-05-06
+-------------------------------------
 
 ### Fixes
  * never prepend system python path to PYTHONPATH (#8)
