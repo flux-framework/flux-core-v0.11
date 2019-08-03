@@ -607,8 +607,6 @@ static flux_cmd_t *wrexecd_cmd_create (flux_t *h, struct wreck_job *job)
     flux_cmd_t *cmd = NULL;
     const char *wrexecd_path;
     char *cwd = NULL;
-    char buf [4096];
-    int n;
 
     if (!(cmd = flux_cmd_create (0, NULL, NULL))) {
         flux_log_error (h, "wrexecd_cmd_create: flux_cmd_create");
@@ -618,27 +616,15 @@ static flux_cmd_t *wrexecd_cmd_create (flux_t *h, struct wreck_job *job)
         flux_log_error (h, "wrexecd_cmd_create: flux_attr_get");
         goto error;
     }
-    if (flux_cmd_argv_append (cmd, "%s", wrexecd_path) < 0) {
+    if (flux_cmd_argv_append (cmd, wrexecd_path) < 0) {
         flux_log_error (h, "wrexecd_cmd_create: flux_cmd_argv_append");
         goto error;
     }
-    n = snprintf (buf, sizeof(buf), "--lwj-id=%ju", (uintmax_t) job->id);
-    if ((n >= sizeof (buf)) || (n < 0)) {
-        flux_log_error (h, "failed to append id to cmdline for job%ju\n",
-                            (uintmax_t) job->id);
-        goto error;
-    }
-    if (flux_cmd_argv_append (cmd, "%s", buf) < 0) {
+    if (flux_cmd_argv_appendf (cmd, "--lwj-id=%ju", (uintmax_t) job->id) < 0) {
         flux_log_error (h, "wrexecd_cmd_create: flux_cmd_argv_append");
         goto error;
     }
-    n = snprintf (buf, sizeof (buf), "--kvs-path=%s", job->kvs_path);
-    if ((n >= sizeof (buf)) || (n < 0)) {
-        flux_log_error (h, "failed to append kvspath to cmdline for job%ju\n",
-                            (uintmax_t) job->id);
-        goto error;
-    }
-    if (flux_cmd_argv_append (cmd, "%s", buf) < 0) {
+    if (flux_cmd_argv_appendf (cmd, "--kvs-path=%s", job->kvs_path) < 0) {
         flux_log_error (h, "wrexecd_cmd_create: flux_cmd_argv_append");
         goto error;
     }
