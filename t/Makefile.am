@@ -223,6 +223,7 @@ check_SCRIPTS = \
         issues/t0821-kvs-segfault.sh \
 	issues/t0704-mpirun-rank.sh \
 	issues/t1760-kvs-use-after-free.sh \
+	issues/t2284-initial-program-format-chars.sh \
 	lua/t0001-send-recv.t \
 	lua/t0002-rpc.t \
 	lua/t0003-events.t \
