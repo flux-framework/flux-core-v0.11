@@ -4,8 +4,15 @@
           the issue tracker for the repository at:
           https://github.com/flux-framework/flux-core-v0.11.
 
+flux-core version 0.11.3 - 2019-08-08
+-------------------------------------
+
+### Fixes
+ * Fix consumption of % format characters on broker cmdline (#25)
+
 flux-core version 0.11.2 - 2019-06-05
 -------------------------------------
+
 ### Fixes
  * Fix flux-wreckrun --detach option when used under a scheduler (#16)
 
