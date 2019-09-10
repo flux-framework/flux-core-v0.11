@@ -28,7 +28,8 @@ local lwj_options = {
     ['trace-pmi-server'] =      "Log simple-pmi server protocol exchange",
     ['cpu-affinity'] =          "Set default cpu-affinity to assigned cores",
     ['gpubind'] =               "Control CUDA_VISIBLE_DEVICES [=per-task,off]",
-    ['mpi'] =                   "Set hint for type of MPI, e.g. -o mpi=spectrum "
+    ['mpi'] =                   "Set hint for type of MPI, e.g. -o mpi=spectrum",
+    ['no-filter-jobid'] =       "Do not filter *_JOBID env variables"
 }
 
 local default_opts = {
@@ -136,20 +137,22 @@ function wreck:usage()
 end
 
 
-function wreck.get_filtered_env ()
+function wreck.get_filtered_env (no_filter_jobid)
     local env = posix.getenv()
     env.HOSTNAME = nil
     env.ENVIRONMENT = nil
     for k,v in pairs (env) do
-        if k:match ("SLURM_") then env[k] = nil end
-        if k:match ("FLUX_URI") then env[k] = nil end
+        if not (no_filter_jobid and k:match("_JOBID$")) then
+           if k:match ("SLURM_") then env[k] = nil end
+           if k:match ("FLUX_URI") then env[k] = nil end
+        end
     end
     return (env)
 end
 
 local function get_job_env (arg)
     local f = arg.flux
-    local env = wreck.get_filtered_env ()
+    local env = wreck.get_filtered_env (arg.no_filter_jobid)
     local default_env = {}
     if f then default_env = f:kvs_get ("lwj.environ") or {} end
     for k,v in pairs (env) do
@@ -462,13 +465,19 @@ function wreck:jobreq ()
     if self.fixup_nnodes then
         fixup_nnodes (self)
     end
+    no_filter_jobid = self.job_options['no-filter-jobid']
     local jobreq = {
         name   =  self.opts.J,
         nnodes =  self.nnodes or 0,
         ntasks =  self.ntasks,
         ncores =  self.ncores,
         cmdline = self.cmdline,
-        environ = self.opts.S and {} or get_job_env { flux = self.flux },
+        environ = (self.opts.S and {} or
+                      get_job_env {
+                         flux = self.flux,
+                         no_filter_jobid = no_filter_jobid
+                      }
+                  ),
         cwd =     posix.getcwd (),
         walltime =self.walltime or 0,
         ngpus = self.ngpus or 0,
