@@ -70,6 +70,9 @@ test_expect_success 'wreck plugins can use wreck:environ:get()' '
 	UNSETME_foo=1 flux wreckrun /usr/bin/env > all_env.out &&
 	test_expect_code 1 grep UNSETME all_env.out
 '
+test_expect_success 'wreck: SLURM_JOBID is filtered out by default' '
+	test "$(SLURM_JOBID=baz flux wreckrun -n1 printenv SLURM_JOBID)" = ""
+'
 test_expect_success 'wreck: wreckrun -o no-filter-jobid=true works' '
 	test "$(SLURM_JOBID=baz flux wreckrun -o no-filter-jobid=true -n1 printenv SLURM_JOBID)" = "baz"
 '
